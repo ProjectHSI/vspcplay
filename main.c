@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
+#include "getopt.h"
 #include <sys/types.h>
 #include <fcntl.h>
 #include <math.h>
@@ -97,6 +97,9 @@ static unsigned char muted_at_startup[8];
 static int just_show_info = 0;
 
 SDL_Surface *screen=NULL;
+SDL_Texture *texture=NULL;
+SDL_Window *window=NULL;
+SDL_Renderer *renderer=NULL;
 SDL_Surface *memsurface=NULL;
 unsigned char *memsurface_data=NULL;
 #define BUFFER_SIZE 65536
@@ -156,6 +159,8 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 {
 //	printf("Callback %d  audio_buf_bytes: %d\n", len, audio_buf_bytes);
 	
+	//SDL_memset(stream, 0, len);
+
 	if (g_cfg_update_in_callback)
 	{
 		while (len>audio_buf_bytes)
@@ -284,6 +289,7 @@ static struct option long_options[] = {
 	{0,0,0,0}
 };
 
+/*
 int parse_args(int argc, char **argv)
 {
 	int res;
@@ -383,6 +389,7 @@ int parse_args(int argc, char **argv)
 
 	return 0;
 }
+*/
 
 void write_mask(unsigned char packed_mask[32])
 {
@@ -505,7 +512,6 @@ void do_scroller(int elaps_milli)
 	tmprect.h = 28;
 	SDL_FillRect(screen, &tmprect, color_screen_black);
 	
-	
 	for (i=0; i<cur_len; i++)
 	{
 		off = sin(angle)*8.0;
@@ -542,14 +548,45 @@ int init_sdl()
 
 	if (!g_cfg_novideo) {
 		// video
-		screen = SDL_SetVideoMode(800, 600, 0, SDL_SWSURFACE);
-		if (screen == NULL) {
-			printf("Failed to set video mode\n");
-			return 0;
+		window = SDL_CreateWindow(PROG_NAME_VERSION_STRING,
+                          SDL_WINDOWPOS_UNDEFINED,
+                          SDL_WINDOWPOS_UNDEFINED,
+                          800, 600,
+                          SDL_WINDOW_OPENGL);
+
+		if (window == NULL) {
+			printf("%s\n", SDL_GetError());
+			exit(1);
 		}
 
-		SDL_WM_SetCaption(PROG_NAME_VERSION_STRING, NULL);
-		
+		renderer = SDL_CreateRenderer(window, -1, 0);
+
+		if (renderer == NULL) {
+			printf("%s\n", SDL_GetError());
+			exit(1);
+		}
+
+		screen = SDL_CreateRGBSurface(0, 800, 600, 32,
+			0x00FF0000,
+			0x0000FF00,
+			0x000000FF,
+			0xFF000000);
+
+		if (screen == NULL) {
+			printf("%s\n", SDL_GetError());
+			exit(1);
+		}
+
+		texture = SDL_CreateTexture(renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			800, 600);
+
+		if (texture == NULL) {
+			printf("%s\n", SDL_GetError());
+			exit(1);
+		}
+
 		// precompute some colors
 		color_screen_black = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
 		color_screen_white = SDL_MapRGB(screen->format, 0xff, 0xff, 0xff);
@@ -633,6 +670,8 @@ void printInfo(void)
 	}
 }
 
+const char* constTestFiles[] = { "D:\\ProjectHSI\\VSPCPlay\\SPC\\04 Credits (No Clapping).spc" };
+
 int main(int argc, char **argv)
 {
 	int tmp, i;
@@ -651,7 +690,10 @@ int main(int argc, char **argv)
 
 	printf("%s\n", PROG_NAME_VERSION_STRING);
 	
-	parse_args(argc, argv);
+	//parse_args(argc, argv);
+
+	g_cfg_num_files = sizeof(constTestFiles);
+	g_cfg_playlist = constTestFiles;
 
 	if (g_cfg_num_files < 1) {
 		printf("No files specified\n");
@@ -871,7 +913,7 @@ reload:
 				{
 					case SDL_KEYDOWN:
 						{
-							SDLKey sym = ev.key.keysym.sym;
+							SDL_Keycode sym = ev.key.keysym.sym;
 
 							if (sym == SDLK_ESCAPE) {
 								if (!g_cfg_nosound) {
@@ -979,15 +1021,6 @@ reload:
 											case 19: IAPU.RAM[0xf7]--; break;
 										}
 									}
-									if (ev.button.button == SDL_BUTTON_WHEELUP ||
-										ev.button.button == SDL_BUTTON_WHEELDOWN)
-									{
-										if (ev.button.button == SDL_BUTTON_WHEELUP) { i=1; } else { i = -1; }
-										if (x>1 && x<4) { IAPU.RAM[0xf4] += i; }
-										if (x>6 && x<9) { IAPU.RAM[0xf5] += i; }
-										if (x>11 && x<14) { IAPU.RAM[0xf6] += i; }
-										if (x>16 && x<19) { IAPU.RAM[0xf7] += i; }
-									}
 								}
 							}
 
@@ -1028,6 +1061,25 @@ reload:
 								if (x>=41 && x<=50) { // write mask
 									write_mask(packed_mask);
 								}
+							}
+						}
+						break;
+
+					case SDL_MOUSEWHEEL:
+						if (	(ev.button.x >= PORTTOOL_X + (8*5)) &&
+									ev.button.y >= PORTTOOL_Y)
+						{
+							int x, y;
+							x = ev.wheel.mouseX - (PORTTOOL_X + (8*5));
+							x /= 8;
+							y = ev.wheel.mouseY - PORTTOOL_Y;
+							y /= 8;
+							if (y==1) {
+								if (ev.wheel.y > 0) { i=1; } else { i = -1; }
+								if (x>1 && x<4) { IAPU.RAM[0xf4] += i; }
+								if (x>6 && x<9) { IAPU.RAM[0xf5] += i; }
+								if (x>11 && x<14) { IAPU.RAM[0xf6] += i; }
+								if (x>16 && x<19) { IAPU.RAM[0xf7] += i; }
 							}
 						}
 						break;
@@ -1140,7 +1192,7 @@ reload:
 			
 			sdlfont_drawString(screen, MEMORY_VIEW_X+520, tmp, "Voices pitchs:", color_screen_white);
 			tmp += 9;
-			
+
 			tmprect.x=MEMORY_VIEW_X+520;
 			tmprect.y=tmp;
 			tmprect.w=screen->w-tmprect.x;
@@ -1270,7 +1322,12 @@ reload:
 
 			
 			
-			SDL_UpdateRect(screen, 0, 0, 0, 0);
+			//SDL_UpdateRect(screen, 0, 0, 0, 0);
+			int updateTextureStatus = SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+//			printf(SDL_GetError());
+			int renderClearStatus = SDL_RenderClear(renderer);
+			int renderCopyStatus = SDL_RenderCopy(renderer, texture, NULL, NULL);
+			SDL_RenderPresent(renderer);
 			time_last = time_cur;
 			if (g_cfg_nice) {  SDL_Delay(100); }
 		} // if !g_cfg_novideo
