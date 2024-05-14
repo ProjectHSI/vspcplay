@@ -24,7 +24,7 @@ jobs:
 
     - name: Install SDL2
       id: sdl
-      run: apt install libsdl2-dev
+      run: sudo apt-get install libsdl2-dev
       #with:
         #install-linux-dependencies: true
         #version: '2.28.5'
