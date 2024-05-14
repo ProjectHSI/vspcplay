@@ -30,7 +30,7 @@ jobs:
            sudo apt-get update
 
       - name: Install MXE Cross-Compiler
-        run: sudo apt install mxe-i686-w64-mingw32.static-cc
+        run: sudo apt-get install mxe-i686-w64-mingw32.static-cc
 
       - name: Install MXE SDL2
         run: sudo apt-get install mxe-i686-w64-mingw32.static-sdl
