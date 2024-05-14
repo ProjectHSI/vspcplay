@@ -1,0 +1,58 @@
+# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+name: MXE Makefile
+
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+    
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          submodules: recursive
+
+      - name: Setup MXE
+        # NOTE: OS release override when adding the repo is intentional - MXE doesn't have releases for the latest versions of Ubuntu. I'd really like for it to have those releases, but it doesn't, so we have to deal with it.
+        run: |
+           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
+           sudo add-apt-repository "deb [arch=amd64] https://pkg.mxe.cc/repos/apt focal main"
+           sudo apt-get update
+
+      - name: Install MXE Cross-Compiler
+        run: sudo apt install mxe-i686-w64-mingw32.static-cc
+
+      - name: Install MXE SDL2
+        run: sudo apt-get install mxe-i686-w64-mingw32.static-libsdl1-dev
+        #with:
+          #install-linux-dependencies: true
+          #version: '2.28.5'
+          #version-sdl-image: '2.28.5'
+
+      - name: Build
+        run: make -f Makefile.mxe
+
+      - name: Get Commit Hash
+        id: gitcommithash
+        shell: bash
+        run: |
+          echo "git-commit-hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: main-${{ steps.gitcommithash.outputs.git-commit-hash }}
+          path: |
+              vspcplay
+          if-no-files-found: error
+          retention-days: 0

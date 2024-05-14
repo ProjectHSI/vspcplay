@@ -23,7 +23,6 @@ jobs:
         submodules: recursive
 
     - name: Install SDL2
-      id: sdl
       run: sudo apt-get install libsdl1.2-dev
       #with:
         #install-linux-dependencies: true
