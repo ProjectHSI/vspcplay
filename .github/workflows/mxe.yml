@@ -33,7 +33,7 @@ jobs:
         run: sudo apt install mxe-i686-w64-mingw32.static-cc
 
       - name: Install MXE SDL2
-        run: sudo apt-get install mxe-i686-w64-mingw32.static-libsdl1-dev
+        run: sudo apt-get install mxe-i686-w64-mingw32.static-sdl
         #with:
           #install-linux-dependencies: true
           #version: '2.28.5'
