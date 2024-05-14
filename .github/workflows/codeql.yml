@@ -78,6 +78,7 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
+        sudo apt-get install libsdl1.2-dev
         make
 
     - name: Perform CodeQL Analysis
