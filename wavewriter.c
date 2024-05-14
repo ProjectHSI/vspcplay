@@ -122,7 +122,7 @@ int waveWriter_addSamples(WaveWriter *wr, void *data, int n_samples)
 		return -1;
 	}
 
-	if (1 != fwrite(data, wr->bytes_per_sample * wr->channels * n_samples, 1, wr->fptr)) {
+	if (1 != fwrite(data, (size_t) wr->bytes_per_sample * wr->channels * n_samples, 1, wr->fptr)) {
 		perror("error writing to wave file");
 		return -1;
 	}
