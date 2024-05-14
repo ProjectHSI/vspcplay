@@ -4,7 +4,6 @@ name: Primary Makefile
 
 on:
   - push
-  - pull_request
   - workflow_dispatch
     
 
