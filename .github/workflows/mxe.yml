@@ -51,7 +51,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4.0.0
         with:
-          name: main-${{ steps.gitcommithash.outputs.git-commit-hash }}
+          name: mxe-${{ steps.gitcommithash.outputs.git-commit-hash }}
           path: |
               vspcplay.exe
           if-no-files-found: error
