@@ -53,6 +53,6 @@ jobs:
         with:
           name: main-${{ steps.gitcommithash.outputs.git-commit-hash }}
           path: |
-              vspcplay
+              vspcplay.exe
           if-no-files-found: error
           retention-days: 0
