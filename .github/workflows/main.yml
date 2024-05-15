@@ -36,7 +36,7 @@ jobs:
           cd build
           ../configure
           make
-          make install
+          sudo make install
           cd ../..
         #with:
           #install-linux-dependencies: true
