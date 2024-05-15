@@ -21,25 +21,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup MXE
-        # NOTE: OS release override when adding the repo is intentional - MXE doesn't have releases for the latest versions of Ubuntu. I'd really like for it to have those releases, but it doesn't, so we have to deal with it.
+      - uses: actions/checkout@v4
+        name: Checkout MXE
+        with:
+          repository: 'mxe/mxe'
+          ref: 'build-2022-04-09'
+          path: 'mxe'
+          submodules: recursive
+
+      - name: Build & Install MXE
         run: |
-           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86B72ED9
-           sudo add-apt-repository "deb [arch=amd64] https://pkg.mxe.cc/repos/apt focal main"
-           sudo apt-get update
-
-      - name: Install MXE Cross-Compiler
-        run: sudo apt-get install mxe-i686-w64-mingw32.static-cc
-
-      - name: Install MXE SDL2
-        run: sudo apt-get install mxe-i686-w64-mingw32.static-sdl2
-        #with:
-          #install-linux-dependencies: true
-          #version: '2.28.5'
-          #version-sdl-image: '2.28.5'
+          cd mxe
+          mkdir build
+          make cc sdl2
+          cd ..
 
       - name: Build
-        run: make -f Makefile.mxe
+        run: make MXEBASE="mxe" -f Makefile.mxe
 
       - name: Get Commit Hash
         id: gitcommithash
