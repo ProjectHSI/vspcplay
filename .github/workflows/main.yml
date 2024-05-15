@@ -16,33 +16,44 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
-      name: Checkout
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          submodules: recursive
 
-    - name: Install SDL2
-      run: apt list -a libsdl2-dev && sudo apt-get install libsdl2-dev=2.28.3+dfsg-2
-      #with:
-        #install-linux-dependencies: true
-        #version: '2.28.5'
-        #version-sdl-image: '2.28.5'
+      - uses: actions/checkout@v4
+        name: Checkout SDL2
+        with:
+          repository: 'libsdl-org/SDL'
+          ref: 'release-2.30.3'
+          path: 'sdl2'
+          submodules: recursive
 
-    - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: make
+      - name: Build & Install SDL2
+        run: |
+          cd sdl2
+          make
+          make install
+          cd ..
+        #with:
+          #install-linux-dependencies: true
+          #version: '2.28.5'
+          #version-sdl-image: '2.28.5'
 
-    - name: Get Commit Hash
-      id: gitcommithash
-      shell: bash
-      run: |
-        echo "git-commit-hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: make
 
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4.0.0
-      with:
-        name: main-${{ steps.gitcommithash.outputs.git-commit-hash }}
-        path: |
-            vspcplay
-        if-no-files-found: error
-        retention-days: 0
+      - name: Get Commit Hash
+        id: gitcommithash
+        shell: bash
+        run: |
+          echo "git-commit-hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: main-${{ steps.gitcommithash.outputs.git-commit-hash }}
+          path: |
+              vspcplay
+          if-no-files-found: error
+          retention-days: 0
