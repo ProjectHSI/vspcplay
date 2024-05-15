@@ -75,7 +75,7 @@ jobs:
       - name: Build & Install MXE
         run: |
           cd mxe
-          make cc sdl2
+          make -d cc sdl2
           cd ..
 
       - name: Build
