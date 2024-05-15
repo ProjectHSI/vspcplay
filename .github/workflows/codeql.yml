@@ -13,6 +13,7 @@ name: "CodeQL"
 
 on:
   push:
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
 
@@ -78,7 +79,7 @@ jobs:
       name: Build
       shell: bash
       run: |
-        sudo apt-get install libsdl1.2-dev
+        sudo apt-get install libsdl2-dev
         make
 
     - name: Perform CodeQL Analysis
